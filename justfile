@@ -25,6 +25,9 @@ profile:
 fuzz:
     cargo fuzz run --sanitizer=none --release fuzz_raptorq
 
+build_wasm: pre
+    wasm-pack build --target nodejs -- --features wasm
+
 build_py: pre
     maturin build
 
