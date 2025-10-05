@@ -1,0 +1,14 @@
+{
+  "name": "wasm-test",
+  "version": "1.0.0",
+  "description": "Test for raptorq wasm package",
+  "main": "test.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "raptorq": "file:../pkg"
+  }
+}

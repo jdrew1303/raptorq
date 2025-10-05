@@ -196,6 +196,145 @@ Alternatively, refer to the [Building and Distribution section](https://pyo3.rs/
 Note, you must pass the `--cargo-extra-args="--features python"` argument to Maturin when building this crate
 to enable the Python binding features.
 
+## WASM Support
+
+This library can be compiled to WebAssembly (WASM) and used in Node.js applications.
+
+### Building the WASM package
+
+1.  **Install `wasm-pack`**:
+    If you don't have `wasm-pack` installed, you can install it using `cargo`:
+    ```bash
+    cargo install wasm-pack
+    ```
+
+2.  **Build the package**:
+    Use the `just` command to build the WASM package. This will create a `pkg` directory with the compiled WASM and JavaScript bindings.
+    ```bash
+    just build_wasm
+    ```
+    This command is a shortcut for:
+    ```bash
+    wasm-pack build --target nodejs -- --features wasm
+    ```
+
+### Publishing the package
+
+After building, you can publish the package to the npm registry.
+
+1.  **Navigate to the `pkg` directory**:
+    ```bash
+    cd pkg
+    ```
+
+2.  **Login to npm**:
+    If you are not already logged in, you will need to do so:
+    ```bash
+    npm login
+    ```
+
+3.  **Publish the package**:
+    ```bash
+    npm publish
+    ```
+
+### Using the WASM package
+
+Here's an example of how to use the `raptorq` WASM package in a Node.js project.
+
+1.  **Create a new Node.js project**:
+    ```bash
+    mkdir my-raptorq-project
+    cd my-raptorq-project
+    npm init -y
+    ```
+
+2.  **Install the `raptorq` package**:
+    You can install the package from npm or by linking to a local build.
+
+    *   **From npm**:
+        ```bash
+        npm install raptorq
+        ```
+    *   **From a local build**:
+        Assuming the `raptorq` project is in a sibling directory:
+        ```bash
+        npm install ../raptorq/pkg
+        ```
+
+3.  **Create a test script `test.js`**:
+    ```javascript
+    const raptorq = require('raptorq');
+
+    function runTest() {
+        console.log("Running raptorq WASM test...");
+
+        // 1. Create some data to encode
+        const data = new Uint8Array(1024 * 512); // 512 KB of data
+        for (let i = 0; i < data.length; i++) {
+            data[i] = i % 256;
+        }
+        console.log("Created data of size: " + data.length);
+
+        // 2. Create an encoder
+        const mtu = 1280; // Maximum Transmission Unit
+        const encoder = new raptorq.Encoder(data, mtu);
+        console.log("Encoder created.");
+
+        // 3. Get encoded packets
+        const repairPacketsPerBlock = 5;
+        const packets = encoder.get_encoded_packets(repairPacketsPerBlock);
+        console.log("Generated " + packets.length + " encoded packets.");
+
+        // 4. Create a decoder
+        const decoder = new raptorq.Decoder(data.length, mtu);
+        console.log("Decoder created.");
+
+        // 5. Decode the packets
+        let decodedData = null;
+        for (const packet of packets) {
+            decodedData = decoder.decode(packet);
+            if (decodedData) {
+                break;
+            }
+        }
+
+        // 6. Verify the result
+        if (decodedData) {
+            console.log("Decoding successful. Verifying data...");
+            if (decodedData.length !== data.length) {
+                console.error("Test failed: Decoded data has a different length.");
+                return;
+            }
+            let match = true;
+            for (let i = 0; i < data.length; i++) {
+                if (data[i] !== decodedData[i]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                console.log("Test passed: Decoded data matches original data.");
+            } else {
+                console.error("Test failed: Decoded data does not match original data.");
+            }
+        } else {
+            console.error("Test failed: Decoding did not complete.");
+        }
+    }
+
+    try {
+        runTest();
+    } catch (e) {
+        console.error("An error occurred during the test:", e);
+    }
+    ```
+
+4.  **Run the test**:
+    ```bash
+    node test.js
+    ```
+
 ## License
 
 Licensed under

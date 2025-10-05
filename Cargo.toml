@@ -10,11 +10,15 @@ edition = "2024"
 authors = ["Christopher Berner <christopherberner@gmail.com>"]
 
 [lib]
-crate-type = ["lib"]
+crate-type = ["lib", "cdylib"]
 
 [dependencies]
 serde = {version = "1.0.102", features=["std", "derive"], optional = true}
 pyo3 = {version = "0.24.1", features=["extension-module", "abi3-py37"], optional = true }
+wasm-bindgen = { version = "0.2.92", optional = true }
+js-sys = { version = "0.3.69", optional = true }
+wee_alloc = { version = "0.4.5", optional = true }
+console_error_panic_hook = { version = "0.1.7", optional = true }
 
 [dev-dependencies]
 criterion = "0.5"
@@ -55,3 +59,4 @@ benchmarking = ["std"]
 python = ["pyo3", "std"]
 serde_support = ["serde", "std"]
 std = []
+wasm = ["wasm-bindgen", "js-sys", "wee_alloc", "console_error_panic_hook"]
